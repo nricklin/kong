@@ -2,6 +2,9 @@ local utils = require "kong.tools.utils"
 local stringy = require "stringy"
 local cjson = require "cjson"
 
+local table_concat = table.concat
+local pcall = pcall
+
 local _M = {}
 
 local APPLICATION_JSON = "application/json"
@@ -27,7 +30,7 @@ local function read_response_body()
     ngx.arg[1] = nil 
   end
   if eof then 
-    local response_body = table.concat(buffered) 
+    local response_body = table_concat(buffered) 
     return response_body
   end
   return nil

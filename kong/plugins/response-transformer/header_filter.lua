@@ -1,6 +1,9 @@
 local utils = require "kong.tools.utils"
 local stringy = require "stringy"
 
+local table_insert = table.insert
+local type = type
+
 local _M = {}
 
 local APPLICATION_JSON = "application/json"
@@ -21,6 +24,19 @@ local function iterate_and_exec(val, cb)
       local parts = stringy.split(entry, ":")
       cb(parts[1], utils.table_size(parts) == 2 and parts[2] or nil)
     end
+  end
+end
+
+local function concat_value(current_value, value)
+  local current_value_type = type(current_value)
+ 
+  if current_value_type  == "string" then
+    return { current_value, value }
+  elseif current_value_type  == "table" then
+    table_insert(current_value, value)
+    return current_value  
+  else
+    return { value } 
   end
 end
 
@@ -58,7 +74,16 @@ function _M.execute(conf)
     end
 
   end
-
+  
+  if conf.concat then
+  
+    -- concat header
+    if conf.concat.headers then
+      iterate_and_exec(conf.concat.headers, function(name, value)
+        ngx.header[name] = concat_value(ngx.header[name], value)
+      end)
+    end
+  end
 end
 
 return _M

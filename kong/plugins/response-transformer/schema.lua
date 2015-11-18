@@ -13,6 +13,12 @@ return {
           headers = { type = "array" }
         }
       }
+    },
+    concat = { type = "table", schema = {
+        fields = {
+          headers = { type = "array" }
+        }
+      }
     }
   }
 }

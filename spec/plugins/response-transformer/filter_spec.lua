@@ -13,7 +13,8 @@ describe("Response Transformer Plugin #proxy", function()
     spec_helper.insert_fixtures {
       api = {
         {name = "tests-response-transformer", request_host = "response.com", upstream_url = "http://httpbin.org"},
-        {name = "tests-response-transformer2", request_host = "response2.com", upstream_url = "http://httpbin.org"}
+        {name = "tests-response-transformer2", request_host = "response2.com", upstream_url = "http://httpbin.org"},
+        {name = "tests-response-transformer3", request_host = "response3.com", upstream_url = "http://httpbin.org"}
       },
       plugin = {
         {
@@ -38,7 +39,19 @@ describe("Response Transformer Plugin #proxy", function()
             }
           },
           __api = 2
-        }
+        },
+        {
+          name = "response-transformer",
+          config = {
+            add = {
+              headers = {"h1:a1"}
+            },
+            concat = {
+              headers = {"h1:a2", "h1:a3", "h2:b1"}
+            }
+          },
+          __api = 3
+        },
       }
     }
 
@@ -96,5 +109,19 @@ describe("Response Transformer Plugin #proxy", function()
     end)
 
   end)
-
+  
+  describe("Test concatenating parameters", function()
+  
+    it("should create new header if not its missing", function()
+      local _, status, headers = http_client.get(STUB_GET_URL, {}, {host = "response3.com"})
+      assert.are.equal(200, status)
+      assert.are.equal("b1", headers["h2"])
+    end)
+    
+    it("should concat value if header exists", function()
+      local _, status, headers = http_client.get(STUB_GET_URL, {}, {host = "response3.com"})
+      assert.are.equal(200, status)
+      assert.are.equal("a1, a2, a3", headers["h1"])
+    end)
+  end)
 end)
