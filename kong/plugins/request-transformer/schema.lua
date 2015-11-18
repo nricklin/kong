@@ -17,6 +17,14 @@ return {
           querystring = { type = "array" }
         }
       }
+    },
+    concat = { type = "table",
+      schema = {
+        fields = {
+          headers = { type = "array" },
+          querystring = { type = "array" }
+        }
+      }
     }
   }
 }

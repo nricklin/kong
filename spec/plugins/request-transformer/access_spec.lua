@@ -12,7 +12,8 @@ describe("Request Transformer", function()
     spec_helper.insert_fixtures {
       api = {
         { name = "tests-request-transformer-1", request_host = "test1.com", upstream_url = "http://mockbin.com" },
-        { name = "tests-request-transformer-2", request_host = "test2.com", upstream_url = "http://httpbin.org" }
+        { name = "tests-request-transformer-2", request_host = "test2.com", upstream_url = "http://httpbin.org" },
+        { name = "tests-request-transformer-3", request_host = "test3.com", upstream_url = "http://mockbin.com" }
       },
       plugin = {
         {
@@ -39,6 +40,25 @@ describe("Request Transformer", function()
             }
           },
           __api = 2
+        },
+        {
+          name = "request-transformer",
+          config = {
+            add = {
+              headers = {"x-added:a1", "x-added2:b1"},
+              querystring = {"p1:a1"},
+              form = {"newformparam:newvalue"}
+            },
+            remove = {
+              headers = { "x-to-remove" },
+              querystring = { "toremovequery" }
+            },
+            concat = {
+              headers = {"x-added:a2", "x-added:a3"},
+              querystring = {"p1:a2", "p2:b1"}
+            }
+          },
+          __api = 3
         }
       },
     }
@@ -141,4 +161,36 @@ describe("Request Transformer", function()
 
   end)
   
+   describe("Test concatenating parameters", function()
+    
+    it("should add new header if missing", function()
+      local response, status = http_client.get(STUB_GET_URL, {}, {host = "test3.com"})
+      local body = cjson.decode(response)
+      assert.are.equal(200, status)
+      assert.are.equal("b1", body.headers["x-added2"])
+    end)
+    
+    it("should concatenate values to existing headers", function()
+      local response, status = http_client.get(STUB_GET_URL, {}, {host = "test3.com"})
+      local body = cjson.decode(response)
+      assert.are.equal(200, status)
+      assert.are.equal("a1, a2, a3", body.headers["x-added"])
+    end)
+    
+    it("should add new parameters on POST when query string key missing", function()
+      local response, status = http_client.post(STUB_POST_URL, { hello = "world" }, {host = "test3.com"})
+      local body = cjson.decode(response)
+      assert.are.equal(200, status)
+      assert.are.equal("b1", body.queryString["p2"])
+    end)
+    
+    it("should concat value on POST when query string key exists", function()
+      local response, status = http_client.post(STUB_POST_URL.."/?q1=20", { hello = "world" }, {host = "test3.com"})
+      local body = cjson.decode(response)
+      assert.are.equal(200, status)
+      assert.are.equal("a1", body.queryString["p1"][1])
+      assert.are.equal("a2", body.queryString["p1"][2])
+      assert.are.equal("20", body.queryString["q1"])
+    end)
+  end)
 end)
