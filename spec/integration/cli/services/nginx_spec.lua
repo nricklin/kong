@@ -37,7 +37,6 @@ describe("Nginx", function()
     assert.truthy(ok)
 
     local ok, err = nginx:start()
-    print(err)
     assert.truthy(ok)
     assert.falsy(err)
     
