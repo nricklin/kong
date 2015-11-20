@@ -51,7 +51,7 @@ function _M.execute(conf)
   -- If limit is exceeded, terminate the request
   if stop then
     ngx.ctx.stop_log = true
-    return responses.send(429) -- Don't set a body
+    return responses.send(429, "API rate limit exceeded") -- Set the body to be the same as the rate-limiting plugin
   end
 end
 
